@@ -1,45 +1,17 @@
 {
-    "version": "3.0.0",
-    "summary": "Elm's standard libraries",
-    "repository": "http://github.com/elm-lang/core.git",
+    "version": "1.0.0",
+    "summary": "A dict/set for Elm that accepts a user-provided comparer",
+    "repository": "http://github.com/robertjlooby/elm-generic-dict.git",
     "license": "BSD3",
     "source-directories": [
         "src"
     ],
     "exposed-modules": [
-        "Array",
-        "Basics",
-        "Bitwise",
-        "Char",
-        "Color",
-        "Date",
-        "Debug",
-        "Dict",
-        "Graphics.Element",
-        "Graphics.Collage",
-        "Graphics.Input",
-        "Graphics.Input.Field",
-        "Json.Decode",
-        "Json.Encode",
-        "Keyboard",
-        "List",
-        "Maybe",
-        "Mouse",
-        "Random",
-        "Regex",
-        "Result",
-        "Set",
-        "Signal",
-        "String",
-        "Task",
-        "Text",
-        "Time",
-        "Touch",
-        "Trampoline",
-        "Transform2D",
-        "Window"
+        "GenericDict",
+        "GenericSet"
     ],
-    "native-modules": true,
-    "dependencies": {},
+    "dependencies": {
+        "elm-lang/core": "3.0.0 <= v < 4.0.0"
+    },
     "elm-version": "0.16.0 <= v < 0.17.0"
 }
