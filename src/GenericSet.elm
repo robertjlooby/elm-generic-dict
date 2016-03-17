@@ -40,28 +40,28 @@ type GenericSet t
 
 {-| Create an empty set.
 -}
-empty : GenericSet a
-empty =
-  Set_elm_builtin GenericDict.empty
+empty : (a -> a -> Order) -> GenericSet a
+empty comparer =
+  Set_elm_builtin <| GenericDict.empty comparer
 
 
 {-| Create a set with one value.
 -}
-singleton : comparable -> GenericSet comparable
-singleton k =
-  Set_elm_builtin <| GenericDict.singleton k ()
+singleton : (a -> a -> Order) -> a -> GenericSet a
+singleton comparer k =
+  Set_elm_builtin <| GenericDict.singleton comparer k ()
 
 
 {-| Insert a value into a set.
 -}
-insert : comparable -> GenericSet comparable -> GenericSet comparable
+insert : a -> GenericSet a -> GenericSet a
 insert k (Set_elm_builtin d) =
   Set_elm_builtin <| GenericDict.insert k () d
 
 
 {-| Remove a value from a set. If the value is not found, no changes are made.
 -}
-remove : comparable -> GenericSet comparable -> GenericSet comparable
+remove : a -> GenericSet a -> GenericSet a
 remove k (Set_elm_builtin d) =
   Set_elm_builtin <| GenericDict.remove k d
 
@@ -75,7 +75,7 @@ isEmpty (Set_elm_builtin d) =
 
 {-| Determine if a value is in a set.
 -}
-member : comparable -> GenericSet comparable -> Bool
+member : a -> GenericSet a -> Bool
 member k (Set_elm_builtin d) =
   GenericDict.member k d
 
@@ -89,14 +89,14 @@ size (Set_elm_builtin d) =
 
 {-| Get the union of two sets. Keep all values.
 -}
-union : GenericSet comparable -> GenericSet comparable -> GenericSet comparable
+union : GenericSet a -> GenericSet a -> GenericSet a
 union (Set_elm_builtin d1) (Set_elm_builtin d2) =
   Set_elm_builtin <| GenericDict.union d1 d2
 
 
 {-| Get the intersection of two sets. Keeps values that appear in both sets.
 -}
-intersect : GenericSet comparable -> GenericSet comparable -> GenericSet comparable
+intersect : GenericSet a -> GenericSet a -> GenericSet a
 intersect (Set_elm_builtin d1) (Set_elm_builtin d2) =
   Set_elm_builtin <| GenericDict.intersect d1 d2
 
@@ -104,49 +104,49 @@ intersect (Set_elm_builtin d1) (Set_elm_builtin d2) =
 {-| Get the difference between the first set and the second. Keeps values
 that do not appear in the second set.
 -}
-diff : GenericSet comparable -> GenericSet comparable -> GenericSet comparable
+diff : GenericSet a -> GenericSet a -> GenericSet a
 diff (Set_elm_builtin d1) (Set_elm_builtin d2) =
   Set_elm_builtin <| GenericDict.diff d1 d2
 
 
 {-| Convert a set into a list, sorted from lowest to highest.
 -}
-toList : GenericSet comparable -> List comparable
+toList : GenericSet a -> List a
 toList (Set_elm_builtin d) =
   GenericDict.keys d
 
 
 {-| Convert a list into a set, removing any duplicates.
 -}
-fromList : List comparable -> GenericSet comparable
-fromList xs =
-  List.foldl insert empty xs
+fromList : (a -> a -> Order) -> List a -> GenericSet a
+fromList comparer xs =
+  List.foldl insert (empty comparer) xs
 
 
 {-| Fold over the values in a set, in order from lowest to highest.
 -}
-foldl : (comparable -> b -> b) -> b -> GenericSet comparable -> b
+foldl : (a -> b -> b) -> b -> GenericSet a -> b
 foldl f b (Set_elm_builtin d) =
   GenericDict.foldl (\k _ b -> f k b) b d
 
 
 {-| Fold over the values in a set, in order from highest to lowest.
 -}
-foldr : (comparable -> b -> b) -> b -> GenericSet comparable -> b
+foldr : (a -> b -> b) -> b -> GenericSet a -> b
 foldr f b (Set_elm_builtin d) =
   GenericDict.foldr (\k _ b -> f k b) b d
 
 
 {-| Map a function onto a set, creating a new set with no duplicates.
 -}
-map : (comparable -> comparable') -> GenericSet comparable -> GenericSet comparable'
-map f s =
-  fromList (List.map f (toList s))
+map : (b -> b -> Order) -> (a -> b) -> GenericSet a -> GenericSet b
+map comparer f s =
+  fromList comparer (List.map f (toList s))
 
 
 {-| Create a new set consisting only of elements which satisfy a predicate.
 -}
-filter : (comparable -> Bool) -> GenericSet comparable -> GenericSet comparable
+filter : (a -> Bool) -> GenericSet a -> GenericSet a
 filter p (Set_elm_builtin d) =
   Set_elm_builtin <| GenericDict.filter (\k _ -> p k) d
 
@@ -154,7 +154,7 @@ filter p (Set_elm_builtin d) =
 {-| Create two new sets; the first consisting of elements which satisfy a
 predicate, the second consisting of elements which do not.
 -}
-partition : (comparable -> Bool) -> GenericSet comparable -> ( GenericSet comparable, GenericSet comparable )
+partition : (a -> Bool) -> GenericSet a -> ( GenericSet a, GenericSet a )
 partition p (Set_elm_builtin d) =
   let
     ( p1, p2 ) =

@@ -6,17 +6,17 @@ import GenericSet
 
 set : GenericSet.GenericSet Int
 set =
-  GenericSet.fromList [1..100]
+  GenericSet.fromList compare [1..100]
 
 
 setPart1 : GenericSet.GenericSet Int
 setPart1 =
-  GenericSet.fromList [1..50]
+  GenericSet.fromList compare [1..50]
 
 
 setPart2 : GenericSet.GenericSet Int
 setPart2 =
-  GenericSet.fromList [51..100]
+  GenericSet.fromList compare [51..100]
 
 
 pred : Int -> Bool
