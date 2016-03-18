@@ -1,8 +1,8 @@
 module GenericDict (GenericDict, empty, singleton, insert, update, isEmpty, get, remove, member, size, filter, partition, foldl, foldr, map, union, intersect, diff, keys, values, toList, fromList) where
 
-{-| A dictionary mapping unique keys to values. The keys can be any comparable
-type. This includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or
-lists of comparable types.
+{-| A dictionary mapping unique keys to values. The keys can be any type. The
+builder functions take a comparer function that takes two keys and returns an
+Order.
 
 Insert, remove, and query operations all take *O(log n)* time. Dictionary
 equality with `(==)` is unreliable and should not be used.
@@ -32,29 +32,16 @@ import Dict as CoreDict
 import String
 
 
--- BBlack and NBlack should only be used during the deletion
--- algorithm. Any other occurrence is a bug and should fail an assert.
-
-
 type NColor
   = Red
   | Black
   | BBlack
-    -- Double Black, counts as 2 blacks for the invariant
   | NBlack
-
-
-
--- Negative Black, counts as -1 blacks for the invariant
 
 
 type LeafColor
   = LBlack
   | LBBlack
-
-
-
--- Double Black, counts as 2
 
 
 {-| A dictionary of keys and values. So a `(GenericDict String User)` is a dictionary
@@ -76,7 +63,7 @@ getComparer dict =
       comparer
 
 
-{-| Create an empty dictionary.
+{-| Create an empty dictionary using the given comparer.
 -}
 empty : (k -> k -> Order) -> GenericDict k v
 empty comparer =
@@ -97,7 +84,7 @@ maxWithDefault k v r =
 `Nothing`. This is useful when you are not sure if a key will be in the
 dictionary.
 
-    animals = fromList [ ("Tom", Cat), ("Jerry", Mouse) ]
+    animals = fromList compare [ ("Tom", Cat), ("Jerry", Mouse) ]
 
     get "Tom"   animals == Just Cat
     get "Jerry" animals == Just Mouse
@@ -153,7 +140,7 @@ sizeHelp n dict =
 
 {-| Determine if a dictionary is empty.
 
-    isEmpty empty == True
+    isEmpty (empty compare) == True
 -}
 isEmpty : GenericDict k v -> Bool
 isEmpty dict =
@@ -281,7 +268,7 @@ update k alter dict =
         blacken updatedDict
 
 
-{-| Create a dictionary with one key-value pair.
+{-| Create a dictionary with one key-value pair, using the given comparer.
 -}
 singleton : (k -> k -> Order) -> k -> v -> GenericDict k v
 singleton comparer key value =
@@ -370,10 +357,6 @@ reportRemBug msg c lgot rgot =
         ]
 
 
-
--- Remove the top node from the tree, may leave behind BBlacks
-
-
 rem : NColor -> GenericDict k v -> GenericDict k v -> GenericDict k v
 rem c l r =
   case ( l, r ) of
@@ -404,7 +387,6 @@ rem c l r =
         _ ->
           reportRemBug "Black/Red/LBlack" c (toString cl) (toString cr)
 
-    -- l and r are both RBNodes
     ( RBNode_elm_builtin cl kl vl ll rl comparer, RBNode_elm_builtin _ _ _ _ _ _ ) ->
       let
         ( k, v ) =
@@ -416,20 +398,12 @@ rem c l r =
         bubble c k v l' r
 
 
-
--- Kills a BBlack or moves it upward, may leave behind NBlack
-
-
 bubble : NColor -> k -> v -> GenericDict k v -> GenericDict k v -> GenericDict k v
 bubble c k v l r =
   if isBBlack l || isBBlack r then
     balance (moreBlack c) k v (lessBlackTree l) (lessBlackTree r)
   else
     RBNode_elm_builtin c k v l r <| getComparer l
-
-
-
--- Removes rightmost node, may leave root as BBlack
 
 
 removeMax : NColor -> k -> v -> GenericDict k v -> GenericDict k v -> GenericDict k v
@@ -440,10 +414,6 @@ removeMax c k v l r =
 
     RBNode_elm_builtin cr kr vr lr rr _ ->
       bubble c k v l (removeMax cr kr vr lr rr)
-
-
-
--- generalized tree balancing act
 
 
 balance : NColor -> k -> v -> GenericDict k v -> GenericDict k v -> GenericDict k v
@@ -471,23 +441,18 @@ blackish t =
 balanceHelp : GenericDict k v -> GenericDict k v
 balanceHelp tree =
   case tree of
-    -- double red: left, left
     RBNode_elm_builtin col zk zv (RBNode_elm_builtin Red yk yv (RBNode_elm_builtin Red xk xv a b _) c _) d comparer ->
       balancedTree col xk xv yk yv zk zv a b c d comparer
 
-    -- double red: left, right
     RBNode_elm_builtin col zk zv (RBNode_elm_builtin Red xk xv a (RBNode_elm_builtin Red yk yv b c _) _) d comparer ->
       balancedTree col xk xv yk yv zk zv a b c d comparer
 
-    -- double red: right, left
     RBNode_elm_builtin col xk xv a (RBNode_elm_builtin Red zk zv (RBNode_elm_builtin Red yk yv b c _) d _) comparer ->
       balancedTree col xk xv yk yv zk zv a b c d comparer
 
-    -- double red: right, right
     RBNode_elm_builtin col xk xv a (RBNode_elm_builtin Red yk yv b (RBNode_elm_builtin Red zk zv c d _) _) comparer ->
       balancedTree col xk xv yk yv zk zv a b c d comparer
 
-    -- handle double blacks
     RBNode_elm_builtin BBlack xk xv a (RBNode_elm_builtin NBlack zk zv (RBNode_elm_builtin Black yk yv b c _) ((RBNode_elm_builtin Black _ _ _ _ _) as d) _) comparer ->
       RBNode_elm_builtin Black yk yv (RBNode_elm_builtin Black xk xv a b comparer) (balance Black zk zv c (redden d)) comparer
 
@@ -509,10 +474,6 @@ balancedTree col xk xv yk yv zk zv a b c d comparer =
     comparer
 
 
-
--- make the top node black
-
-
 blacken : GenericDict k v -> GenericDict k v
 blacken t =
   case t of
@@ -521,10 +482,6 @@ blacken t =
 
     RBNode_elm_builtin _ k v l r comparer ->
       RBNode_elm_builtin Black k v l r comparer
-
-
-
--- make the top node red
 
 
 redden : GenericDict k v -> GenericDict k v
@@ -550,7 +507,7 @@ map f dict =
 
 
 {-| Fold over the key-value pairs in a dictionary, in order from lowest
-key to highest key.
+key to highest key (by the comparer).
 -}
 foldl : (k -> v -> b -> b) -> b -> GenericDict k v -> b
 foldl f acc dict =
@@ -563,7 +520,7 @@ foldl f acc dict =
 
 
 {-| Fold over the key-value pairs in a dictionary, in order from highest
-key to lowest key.
+key to lowest key (by the comparer).
 -}
 foldr : (k -> v -> b -> b) -> b -> GenericDict k v -> b
 foldr f acc t =
@@ -576,7 +533,7 @@ foldr f acc t =
 
 
 {-| Combine two dictionaries. If there is a collision, preference is given
-to the first dictionary.
+to the first dictionary. Keep the comparer from the first dictionary.
 -}
 union : GenericDict k v -> GenericDict k v -> GenericDict k v
 union t1 t2 =
@@ -591,14 +548,16 @@ union t1 t2 =
 
 
 {-| Keep a key-value pair when its key appears in the second dictionary.
-Preference is given to values in the first dictionary.
+Preference is given to values in the first dictionary. Keep the comparer from
+the first dictionary.
 -}
 intersect : GenericDict k v -> GenericDict k v -> GenericDict k v
 intersect t1 t2 =
   filter (\k _ -> member k t2) t1
 
 
-{-| Keep a key-value pair when its key does not appear in the second dictionary.
+{-| Keep a key-value pair when its key does not appear in the second
+dictionary. Keep the comparer from the first dictionary.
 -}
 diff : GenericDict k v -> GenericDict k v -> GenericDict k v
 diff t1 t2 =
@@ -630,7 +589,7 @@ toList dict =
   foldr (\key value list -> ( key, value ) :: list) [] dict
 
 
-{-| Convert an association list into a dictionary.
+{-| Convert an association list into a dictionary using the given comparer.
 -}
 fromList : (k -> k -> Order) -> List ( k, v ) -> GenericDict k v
 fromList comparer assocs =

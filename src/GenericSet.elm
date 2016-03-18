@@ -1,8 +1,7 @@
 module GenericSet (GenericSet, empty, singleton, insert, remove, isEmpty, member, size, foldl, foldr, map, filter, partition, union, intersect, diff, toList, fromList) where
 
-{-| A set of unique values. The values can be any comparable type. This
-includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or lists
-of comparable types.
+{-| A set of unique values. The values can be any type. The builder functions
+take a comparer function that takes two values and returns an Order.
 
 Insert, remove, and query operations all take *O(log n)* time. GenericSet equality with
 `(==)` is unreliable and should not be used.
@@ -38,14 +37,14 @@ type GenericSet t
   = Set_elm_builtin (GenericDict.GenericDict t ())
 
 
-{-| Create an empty set.
+{-| Create an empty set using the given comparer.
 -}
 empty : (a -> a -> Order) -> GenericSet a
 empty comparer =
   Set_elm_builtin <| GenericDict.empty comparer
 
 
-{-| Create a set with one value.
+{-| Create a set with one value using the given comparer.
 -}
 singleton : (a -> a -> Order) -> a -> GenericSet a
 singleton comparer k =
@@ -87,7 +86,8 @@ size (Set_elm_builtin d) =
   GenericDict.size d
 
 
-{-| Get the union of two sets. Keep all values.
+{-| Get the union of two sets. Keep all values. Keep the comparer from the
+first set.
 -}
 union : GenericSet a -> GenericSet a -> GenericSet a
 union (Set_elm_builtin d1) (Set_elm_builtin d2) =
@@ -95,6 +95,7 @@ union (Set_elm_builtin d1) (Set_elm_builtin d2) =
 
 
 {-| Get the intersection of two sets. Keeps values that appear in both sets.
+Keeps the comparer from the first set.
 -}
 intersect : GenericSet a -> GenericSet a -> GenericSet a
 intersect (Set_elm_builtin d1) (Set_elm_builtin d2) =
@@ -102,42 +103,46 @@ intersect (Set_elm_builtin d1) (Set_elm_builtin d2) =
 
 
 {-| Get the difference between the first set and the second. Keeps values
-that do not appear in the second set.
+that do not appear in the second set. Keeps the comparer from the first set.
 -}
 diff : GenericSet a -> GenericSet a -> GenericSet a
 diff (Set_elm_builtin d1) (Set_elm_builtin d2) =
   Set_elm_builtin <| GenericDict.diff d1 d2
 
 
-{-| Convert a set into a list, sorted from lowest to highest.
+{-| Convert a set into a list, sorted by the comparer.
 -}
 toList : GenericSet a -> List a
 toList (Set_elm_builtin d) =
   GenericDict.keys d
 
 
-{-| Convert a list into a set, removing any duplicates.
+{-| Convert a list into a set, removing any duplicates, using the given
+comparer.
 -}
 fromList : (a -> a -> Order) -> List a -> GenericSet a
 fromList comparer xs =
   List.foldl insert (empty comparer) xs
 
 
-{-| Fold over the values in a set, in order from lowest to highest.
+{-| Fold over the values in a set, in order from lowest to highest (by the
+comparer).
 -}
 foldl : (a -> b -> b) -> b -> GenericSet a -> b
 foldl f b (Set_elm_builtin d) =
   GenericDict.foldl (\k _ b -> f k b) b d
 
 
-{-| Fold over the values in a set, in order from highest to lowest.
+{-| Fold over the values in a set, in order from highest to lowest (by the
+comparer).
 -}
 foldr : (a -> b -> b) -> b -> GenericSet a -> b
 foldr f b (Set_elm_builtin d) =
   GenericDict.foldr (\k _ b -> f k b) b d
 
 
-{-| Map a function onto a set, creating a new set with no duplicates.
+{-| Map a function onto a set, creating a new set with no duplicates and a new
+comparer.
 -}
 map : (b -> b -> Order) -> (a -> b) -> GenericSet a -> GenericSet b
 map comparer f s =
