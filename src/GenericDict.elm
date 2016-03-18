@@ -580,7 +580,14 @@ to the first dictionary.
 -}
 union : GenericDict k v -> GenericDict k v -> GenericDict k v
 union t1 t2 =
-  foldl insert t2 t1
+  let
+    comparer =
+      getComparer t1
+
+    reOrderedT2 =
+      foldl insert (empty comparer) t2
+  in
+    foldl insert reOrderedT2 t1
 
 
 {-| Keep a key-value pair when its key appears in the second dictionary.
