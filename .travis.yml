@@ -2,8 +2,7 @@ sudo: false # force container-based infrastructure
 language: node_js
 cache:
   directories:
-    - node-modules
-    - tests/elm-stuff
+    - tests/elm-stuff/build-artifacts
 node_js:
   - "4.3"
 install:
