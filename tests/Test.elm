@@ -7,11 +7,10 @@ import Test.GenericSet as GenericSet
 
 tests : Test
 tests =
-  suite
-    "robertjlooby/elm-generic-dict tests"
-    [ GenericDict.tests
-    , GenericSet.tests
-    ]
+    suite "robertjlooby/elm-generic-dict tests"
+        [ GenericDict.tests
+        , GenericSet.tests
+        ]
 
 
 main : Program Never
