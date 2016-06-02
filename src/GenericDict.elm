@@ -1,4 +1,4 @@
-module GenericDict (GenericDict, empty, singleton, insert, update, isEmpty, get, remove, member, size, filter, partition, foldl, foldr, map, union, intersect, diff, keys, values, toList, fromList) where
+module GenericDict exposing (GenericDict, empty, singleton, insert, update, isEmpty, get, remove, member, size, filter, partition, foldl, foldr, map, union, intersect, diff, keys, values, toList, fromList)
 
 {-| A dictionary mapping unique keys to values. The keys can be any type. The
 builder functions take a comparer function that takes two keys and returns an

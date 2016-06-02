@@ -1,4 +1,4 @@
-module Test.GenericSet (tests) where
+module Test.GenericSet exposing (tests)
 
 import ElmTest exposing (..)
 import GenericSet

@@ -1,4 +1,4 @@
-module GenericSet (GenericSet, empty, singleton, insert, remove, isEmpty, member, size, foldl, foldr, map, filter, partition, union, intersect, diff, toList, fromList) where
+module GenericSet exposing (GenericSet, empty, singleton, insert, remove, isEmpty, member, size, foldl, foldr, map, filter, partition, union, intersect, diff, toList, fromList)
 
 {-| A set of unique values. The values can be any type. The builder functions
 take a comparer function that takes two values and returns an Order.

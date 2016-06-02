@@ -1,4 +1,4 @@
-module Test.GenericDict (tests) where
+module Test.GenericDict exposing (tests)
 
 import ElmTest exposing (..)
 import GenericDict
