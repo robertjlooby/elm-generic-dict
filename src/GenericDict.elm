@@ -371,18 +371,18 @@ rem c l r =
                 _ ->
                     Debug.crash "cannot have bblack or nblack nodes at this point"
 
-        ( RBEmpty_elm_builtin cl comparer, RBNode_elm_builtin cr k' v' l' r' _ ) ->
+        ( RBEmpty_elm_builtin cl comparer, RBNode_elm_builtin cr key value left right _ ) ->
             case ( c, cl, cr ) of
                 ( Black, LBlack, Red ) ->
-                    RBNode_elm_builtin Black k' v' l' r' comparer
+                    RBNode_elm_builtin Black key value left right comparer
 
                 _ ->
                     reportRemBug "Black/LBlack/Red" c (toString cl) (toString cr)
 
-        ( RBNode_elm_builtin cl k' v' l' r' comparer, RBEmpty_elm_builtin cr _ ) ->
+        ( RBNode_elm_builtin cl key value left right comparer, RBEmpty_elm_builtin cr _ ) ->
             case ( c, cl, cr ) of
                 ( Black, Red, LBlack ) ->
-                    RBNode_elm_builtin Black k' v' l' r' comparer
+                    RBNode_elm_builtin Black key value left right comparer
 
                 _ ->
                     reportRemBug "Black/Red/LBlack" c (toString cl) (toString cr)
@@ -392,10 +392,10 @@ rem c l r =
                 ( k, v ) =
                     maxWithDefault kl vl rl
 
-                l' =
+                left =
                     removeMax cl kl vl ll rl
             in
-                bubble c k v l' r
+                bubble c k v left r
 
 
 bubble : NColor -> k -> v -> GenericDict k v -> GenericDict k v -> GenericDict k v
