@@ -1,4 +1,4 @@
-sudo: false # force container-based infrastructure
+sudo: false
 language: node_js
 cache:
   directories:
@@ -6,10 +6,7 @@ cache:
 node_js:
   - "5"
 install:
-  - npm install -g elm@0.17.0
-before_script:
-  - cd tests
-  - elm package install -y
-  - elm make Test.elm --output test.js
+  - npm install -g elm@0.18.0
+  - npm install -g elm-test
 script:
-  - node test.js
+  - elm-test

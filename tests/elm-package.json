@@ -1,5 +1,5 @@
 {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "summary": "Tests for robertjlooby/elm-generic-dict",
     "repository": "http://github.com/robertjlooby/elm-generic-dict.git",
     "license": "BSD3",
@@ -9,8 +9,9 @@
     ],
     "exposed-modules": [],
     "dependencies": {
-        "elm-community/elm-test": "1.1.0 <= v < 2.0.0",
-        "elm-lang/core": "4.0.0 <= v < 5.0.0"
+        "elm-community/elm-test": "3.1.0 <= v < 4.0.0",
+        "elm-lang/core": "5.0.0 <= v < 6.0.0",
+        "rtfeldman/node-test-runner": "3.0.0 <= v < 4.0.0"
     },
-    "elm-version": "0.17.0 <= v < 0.18.0"
+    "elm-version": "0.18.0 <= v < 0.19.0"
 }
