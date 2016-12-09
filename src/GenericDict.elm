@@ -343,8 +343,8 @@ lessBlackTree dict =
 
 reportRemBug : String -> NColor -> String -> String -> a
 reportRemBug msg c lgot rgot =
-    Debug.crash
-        <| String.concat
+    Debug.crash <|
+        String.concat
             [ "Internal red-black tree invariant violated, expected "
             , msg
             , " and got "
@@ -358,10 +358,10 @@ reportRemBug msg c lgot rgot =
 
 
 rem : NColor -> GenericDict k v -> GenericDict k v -> GenericDict k v
-rem c l r =
-    case ( l, r ) of
+rem color left right =
+    case ( left, right ) of
         ( RBEmpty_elm_builtin _ comparer, RBEmpty_elm_builtin _ _ ) ->
-            case c of
+            case color of
                 Red ->
                     RBEmpty_elm_builtin LBlack comparer
 
@@ -371,31 +371,31 @@ rem c l r =
                 _ ->
                     Debug.crash "cannot have bblack or nblack nodes at this point"
 
-        ( RBEmpty_elm_builtin cl comparer, RBNode_elm_builtin cr k' v' l' r' _ ) ->
-            case ( c, cl, cr ) of
+        ( RBEmpty_elm_builtin cl comparer, RBNode_elm_builtin cr k v l r _ ) ->
+            case ( color, cl, cr ) of
                 ( Black, LBlack, Red ) ->
-                    RBNode_elm_builtin Black k' v' l' r' comparer
+                    RBNode_elm_builtin Black k v l r comparer
 
                 _ ->
-                    reportRemBug "Black/LBlack/Red" c (toString cl) (toString cr)
+                    reportRemBug "Black/LBlack/Red" color (toString cl) (toString cr)
 
-        ( RBNode_elm_builtin cl k' v' l' r' comparer, RBEmpty_elm_builtin cr _ ) ->
-            case ( c, cl, cr ) of
+        ( RBNode_elm_builtin cl k v l r comparer, RBEmpty_elm_builtin cr _ ) ->
+            case ( color, cl, cr ) of
                 ( Black, Red, LBlack ) ->
-                    RBNode_elm_builtin Black k' v' l' r' comparer
+                    RBNode_elm_builtin Black k v l r comparer
 
                 _ ->
-                    reportRemBug "Black/Red/LBlack" c (toString cl) (toString cr)
+                    reportRemBug "Black/Red/LBlack" color (toString cl) (toString cr)
 
         ( RBNode_elm_builtin cl kl vl ll rl comparer, RBNode_elm_builtin _ _ _ _ _ _ ) ->
             let
                 ( k, v ) =
                     maxWithDefault kl vl rl
 
-                l' =
+                newLeft =
                     removeMax cl kl vl ll rl
             in
-                bubble c k v l' r
+                bubble color k v newLeft right
 
 
 bubble : NColor -> k -> v -> GenericDict k v -> GenericDict k v -> GenericDict k v
