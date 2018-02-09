@@ -1,5 +1,5 @@
 {
-    "version": "1.0.2",
+    "version": "1.0.3",
     "summary": "A dict/set for Elm that accepts a user-provided comparer",
     "repository": "https://github.com/robertjlooby/elm-generic-dict.git",
     "license": "BSD3",
