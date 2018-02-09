@@ -13,20 +13,31 @@ functions (`empty`, `singleton` , `fromList`) take a comparer of type
 (key -> key -> Order) as their first argument.
 
 ```elm
+import GenericDict exposing (GenericDict)
+import String exposing (toLower)
+
 type alias Person =
-  { id : Int
-  , name : String
-  }
+    { id : Int
+    , name : String
+    }
 
-GenericDict.fromList
-  (\person person' -> compare person.id person'.id)
-  [{ id = 1, name = "Noah" }, { id = 2, name = "Evan" }]
--- Dict.fromList [{ id = 1, name = "Noah" }, { id = 2, name = "Evan" }]
+dict1 : GenericDict Person Int
+dict1 =
+    GenericDict.fromList
+        (\person1 person2 -> compare person1.id person2.id)
+        [ ( { id = 1, name = "Noah" }, 1 ), ( { id = 2, name = "Evan" }, 2 ) ]
+-- Dict.fromList [({ id = 1, name = "Noah" }, 1), ({ id = 2, name = "Evan" }, 2)]
 
-GenericDict.fromList
-  (\person person' -> compare person.name person'.name)
-  [{ id = 1, name = "Noah" }, { id = 2, name = "Evan" }]
--- Dict.fromList [{ id = 2, name = "Evan" }, { id = 1, name = "Noah" }]
+dict2 : GenericDict String Int
+dict2 =
+    GenericDict.fromList
+        (\str1 str2 -> compare (toLower str1) (toLower str2))
+        [ ( "FIRST", 1 ), ( "SECOND", 2 ), ( "First", 3 ) ]
+-- Dict.fromList [("FIRST", 3), ("SECOND", 2)]
+
+f : Maybe Int
+f = GenericDict.get "FiRsT" dict2
+-- Just 3
 ```
 
 This builds off of the
