@@ -20,16 +20,15 @@ module GenericSet
         , union
         )
 
-{-| A set of unique values. The values can be any comparable type. This
-includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or lists
-of comparable types.
+{-| A set of unique values. The values can be any type. The builder functions
+take a comparer function that takes two values and returns an Order.
 
 Insert, remove, and query operations all take _O(log n)_ time.
 
 
 # Sets
 
-@docs Set
+@docs GenericSet
 
 
 # Build
@@ -61,21 +60,21 @@ Insert, remove, and query operations all take _O(log n)_ time.
 import GenericDict exposing (GenericDict)
 
 
-{-| Represents a set of unique values. So `(Set Int)` is a set of integers and
-`(Set String)` is a set of strings.
+{-| Represents a set of unique values. So `(GenericSet Int)` is a set of integers and
+`(GenericSet String)` is a set of strings.
 -}
 type GenericSet a
     = GenericSet (GenericDict a ())
 
 
-{-| Create an empty set.
+{-| Create an empty set using the given comparer.
 -}
 empty : (a -> a -> Order) -> GenericSet a
 empty comparer =
     GenericSet (GenericDict.empty comparer)
 
 
-{-| Create a set with one value.
+{-| Create a set with one value using the given comparer.
 -}
 singleton : (a -> a -> Order) -> a -> GenericSet a
 singleton comparer key =
@@ -118,6 +117,7 @@ size (GenericSet dict) =
 
 
 {-| Get the union of two sets. Keep all values.
+Keep the comparer from the first set.
 -}
 union : GenericSet a -> GenericSet a -> GenericSet a
 union (GenericSet dict1) (GenericSet dict2) =
@@ -125,14 +125,16 @@ union (GenericSet dict1) (GenericSet dict2) =
 
 
 {-| Get the intersection of two sets. Keeps values that appear in both sets.
+Keeps the comparer from the first set.
 -}
 intersect : GenericSet a -> GenericSet a -> GenericSet a
 intersect (GenericSet dict1) (GenericSet dict2) =
     GenericSet (GenericDict.intersect dict1 dict2)
 
 
-{-| Get the difference between the first set and the second. Keeps values
-that do not appear in the second set.
+{-| Get the difference between the first set and the second.
+Keeps values that do not appear in the second set.
+Keeps the comparer from the first set.
 -}
 diff : GenericSet a -> GenericSet a -> GenericSet a
 diff (GenericSet dict1) (GenericSet dict2) =
@@ -146,7 +148,7 @@ toList (GenericSet dict) =
     GenericDict.keys dict
 
 
-{-| Convert a list into a set, removing any duplicates.
+{-| Convert a list into a set, removing any duplicates, using the given comparer.
 -}
 fromList : (a -> a -> Order) -> List a -> GenericSet a
 fromList comparer list =
@@ -167,7 +169,8 @@ foldr func initialState (GenericSet dict) =
     GenericDict.foldr (\key _ state -> func key state) initialState dict
 
 
-{-| Map a function onto a set, creating a new set with no duplicates.
+{-| Map a function onto a set, creating a new set with no duplicates and a new
+comparer.
 -}
 map : (b -> b -> Order) -> (a -> b) -> GenericSet a -> GenericSet b
 map comparer func (GenericSet dict) =
@@ -176,18 +179,18 @@ map comparer func (GenericSet dict) =
 
 {-| Only keep elements that pass the given test.
 
-    import Set exposing (Set)
+    import GenericSet exposing (GenericSet)
 
-    numbers : Set Int
+    numbers : GenericSet Int
     numbers =
-        Set.fromList [ -2, -1, 0, 1, 2 ]
+        GenericSet.fromList compare [ -2, -1, 0, 1, 2 ]
 
-    positives : Set Int
+    positives : GenericSet Int
     positives =
-        Set.filter (\x -> x > 0) numbers
+        GenericSet.filter (\x -> x > 0) numbers
 
 
-    -- positives == Set.fromList [1,2]
+    -- positives == GenericSet.fromList compare [1,2]
 
 -}
 filter : (a -> Bool) -> GenericSet a -> GenericSet a
@@ -200,8 +203,4 @@ given test, and the second contains all the elements that did not.
 -}
 partition : (a -> Bool) -> GenericSet a -> ( GenericSet a, GenericSet a )
 partition isGood (GenericSet dict) =
-    let
-        ( dict1, dict2 ) =
-            GenericDict.partition (\key _ -> isGood key) dict
-    in
-    ( GenericSet dict1, GenericSet dict2 )
+    Tuple.mapBoth GenericSet GenericSet (GenericDict.partition (\key _ -> isGood key) dict)
