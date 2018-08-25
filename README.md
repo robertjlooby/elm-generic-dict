@@ -40,7 +40,6 @@ f = GenericDict.get "FiRsT" dict2
 -- Just 3
 ```
 
-This builds off of the
-[core Dict implementation](https://github.com/elm-lang/core/tree/3.0.0)
-by Evan Czaplicki as well as the similar
-[elm-all-dict](https://github.com/eeue56/elm-all-dict) by Noah Hall.
+This builds off of the [core Dict implementation][elm-core] by Evan Czaplicki.
+
+[elm-core]: https://github.com/elm/core/tree/1.0.0
