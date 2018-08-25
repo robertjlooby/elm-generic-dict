@@ -24,16 +24,16 @@ module GenericDict
         , values
         )
 
-{-| A dictionary mapping unique keys to values. The keys can be any comparable
-type. This includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or
-lists of comparable types.
+{-| A dictionary mapping unique keys to values. The keys can be any type. The
+builder functions take a comparer function that takes two keys and returns an
+Order.
 
 Insert, remove, and query operations all take _O(log n)_ time.
 
 
 # Dictionaries
 
-@docs Dict
+@docs GenericDict
 
 
 # Build
@@ -46,6 +46,11 @@ Insert, remove, and query operations all take _O(log n)_ time.
 @docs isEmpty, member, get, size
 
 
+# Combine
+
+@docs union, intersect, diff, merge
+
+
 # Lists
 
 @docs keys, values, toList, fromList
@@ -54,11 +59,6 @@ Insert, remove, and query operations all take _O(log n)_ time.
 # Transform
 
 @docs map, foldl, foldr, filter, partition
-
-
-# Combine
-
-@docs union, intersect, diff, merge
 
 -}
 
@@ -75,19 +75,17 @@ type GenericDict k v
     = GenericDict (k -> k -> Order) (RBNode k v)
 
 
-{-| A dictionary of keys and values. So a `Dict String User` is a dictionary
-that lets you look up a `String` (such as user names) and find the associated
-`User`.
+{-| A dictionary of keys and values. So a `GenericDict ID User` is a dictionary
+that lets you look up a `ID` and find the associated `User`.
 
-    import Dict exposing (Dict)
+    import GenericDict exposing (GenericDict)
 
-    users : Dict String User
-    users =
-        Dict.fromList
-            [ ( "Alice", User "Alice" 28 1.65 )
-            , ( "Bob", User "Bob" 19 1.82 )
-            , ( "Chuck", User "Chuck" 33 1.75 )
-            ]
+    type ID
+        = ID String
+
+    compareIDs : ID -> ID -> Order
+    compareIDs (ID left) (ID right) =
+        compare left right
 
     type alias User =
         { name : String
@@ -95,13 +93,21 @@ that lets you look up a `String` (such as user names) and find the associated
         , height : Float
         }
 
+    users : GenericDict ID User
+    users =
+        GenericDict.fromList compareIDs
+            [ ( ID "uuid-1", User "Alice" 28 1.65 )
+            , ( ID "uuid-2", User "Bob" 19 1.82 )
+            , ( ID "uuid-3", User "Chuck" 33 1.75 )
+            ]
+
 -}
 type RBNode k v
     = RBNode_elm_builtin NColor k v (RBNode k v) (RBNode k v)
     | RBEmpty_elm_builtin
 
 
-{-| Create an empty dictionary.
+{-| Create an empty dictionary using the given comparer.
 -}
 empty : (k -> k -> Order) -> GenericDict k v
 empty comparer =
@@ -112,7 +118,7 @@ empty comparer =
 `Nothing`. This is useful when you are not sure if a key will be in the
 dictionary.
 
-    animals = fromList [ ("Tom", Cat), ("Jerry", Mouse) ]
+    animals = fromList compare [ ("Tom", Cat), ("Jerry", Mouse) ]
 
     get "Tom"   animals == Just Cat
     get "Jerry" animals == Just Mouse
@@ -173,7 +179,7 @@ sizeHelp n node =
 
 {-| Determine if a dictionary is empty.
 
-    isEmpty empty == True
+    isEmpty (empty compare) == True
 
 -}
 isEmpty : GenericDict k v -> Bool
@@ -473,7 +479,7 @@ update targetKey alter dict =
                     insert targetKey newValue dict
 
 
-{-| Create a dictionary with one key-value pair.
+{-| Create a dictionary with one key-value pair, using the given comparer.
 -}
 singleton : (k -> k -> Order) -> k -> v -> GenericDict k v
 singleton comparer key value =
@@ -485,16 +491,18 @@ singleton comparer key value =
 -- COMBINE
 
 
-{-| Combine two dictionaries. If there is a collision, preference is given
-to the first dictionary.
+{-| Combine two dictionaries.
+If there is a collision, preference is given to the first dictionary.
+Keep the comparer from the first dictionary.
 -}
 union : GenericDict k v -> GenericDict k v -> GenericDict k v
-union t1 t2 =
-    foldl insert t2 t1
+union (GenericDict comparer t1) (GenericDict _ t2) =
+    GenericDict comparer (foldlHelp (insertHelp comparer) t2 t1)
 
 
 {-| Keep a key-value pair when its key appears in the second dictionary.
 Preference is given to values in the first dictionary.
+Keep the comparer from the first dictionary.
 -}
 intersect : GenericDict k v -> GenericDict k v -> GenericDict k v
 intersect t1 t2 =
@@ -502,10 +510,11 @@ intersect t1 t2 =
 
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
+Keep the comparer from the first dictionary.
 -}
 diff : GenericDict k a -> GenericDict k b -> GenericDict k a
-diff t1 t2 =
-    foldl (\k _ t -> remove k t) t1 t2
+diff (GenericDict comparer t1) (GenericDict _ t2) =
+    GenericDict comparer (foldlHelp (\k _ t -> removeHelp comparer k t) t1 t2)
 
 
 {-| The most general way of combining two dictionaries. You provide three
@@ -574,11 +583,11 @@ mapHelp func root =
 
 {-| Fold over the key-value pairs in a dictionary from lowest key to highest key.
 
-    import Dict exposing (Dict)
+    import GenericDict exposing (GenericDict)
 
-    getAges : Dict String User -> List String
+    getAges : GenericDict String User -> List String
     getAges users =
-        Dict.foldl addAge [] users
+        GenericDict.foldl addAge [] users
 
     addAge : String -> User -> List String -> List String
     addAge _ user ages =
@@ -589,7 +598,7 @@ mapHelp func root =
 
 -}
 foldl : (k -> v -> b -> b) -> b -> GenericDict k v -> b
-foldl func acc (GenericDict comparer root) =
+foldl func acc (GenericDict _ root) =
     foldlHelp func acc root
 
 
@@ -605,11 +614,11 @@ foldlHelp func acc root =
 
 {-| Fold over the key-value pairs in a dictionary from highest key to lowest key.
 
-    import Dict exposing (Dict)
+    import GenericDict exposing (GenericDict)
 
-    getAges : Dict String User -> List String
+    getAges : GenericDict String User -> List String
     getAges users =
-        Dict.foldr addAge [] users
+        GenericDict.foldr addAge [] users
 
     addAge : String -> User -> List String -> List String
     addAge _ user ages =
@@ -620,7 +629,7 @@ foldlHelp func acc root =
 
 -}
 foldr : (k -> v -> b -> b) -> b -> GenericDict k v -> b
-foldr func acc (GenericDict comparer root) =
+foldr func acc (GenericDict _ root) =
     foldrHelp func acc root
 
 
@@ -671,7 +680,7 @@ partition isGood (GenericDict comparer root) =
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
 
-    keys (fromList [(0,"Alice"),(1,"Bob")]) == [0,1]
+    keys (fromList compare [(0,"Alice"),(1,"Bob")]) == [0,1]
 
 -}
 keys : GenericDict k v -> List k
@@ -681,7 +690,7 @@ keys dict =
 
 {-| Get all of the values in a dictionary, in the order of their keys.
 
-    values (fromList [(0,"Alice"),(1,"Bob")]) == ["Alice", "Bob"]
+    values (fromList compare [(0,"Alice"),(1,"Bob")]) == ["Alice", "Bob"]
 
 -}
 values : GenericDict k v -> List v
@@ -696,7 +705,7 @@ toList dict =
     foldr (\key value list -> ( key, value ) :: list) [] dict
 
 
-{-| Convert an association list into a dictionary.
+{-| Convert an association list into a dictionary using the given comparer.
 -}
 fromList : (k -> k -> Order) -> List ( k, v ) -> GenericDict k v
 fromList comparer assocs =
