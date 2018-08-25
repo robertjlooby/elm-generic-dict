@@ -64,55 +64,55 @@ import GenericDict exposing (GenericDict)
 `(GenericSet String)` is a set of strings.
 -}
 type GenericSet a
-    = GenericSet (GenericDict a ())
+    = Set_elm_builtin (GenericDict a ())
 
 
 {-| Create an empty set using the given comparer.
 -}
 empty : (a -> a -> Order) -> GenericSet a
 empty comparer =
-    GenericSet (GenericDict.empty comparer)
+    Set_elm_builtin (GenericDict.empty comparer)
 
 
 {-| Create a set with one value using the given comparer.
 -}
 singleton : (a -> a -> Order) -> a -> GenericSet a
 singleton comparer key =
-    GenericSet (GenericDict.singleton comparer key ())
+    Set_elm_builtin (GenericDict.singleton comparer key ())
 
 
 {-| Insert a value into a set.
 -}
 insert : a -> GenericSet a -> GenericSet a
-insert key (GenericSet dict) =
-    GenericSet (GenericDict.insert key () dict)
+insert key (Set_elm_builtin dict) =
+    Set_elm_builtin (GenericDict.insert key () dict)
 
 
 {-| Remove a value from a set. If the value is not found, no changes are made.
 -}
 remove : a -> GenericSet a -> GenericSet a
-remove key (GenericSet dict) =
-    GenericSet (GenericDict.remove key dict)
+remove key (Set_elm_builtin dict) =
+    Set_elm_builtin (GenericDict.remove key dict)
 
 
 {-| Determine if a set is empty.
 -}
 isEmpty : GenericSet a -> Bool
-isEmpty (GenericSet dict) =
+isEmpty (Set_elm_builtin dict) =
     GenericDict.isEmpty dict
 
 
 {-| Determine if a value is in a set.
 -}
 member : a -> GenericSet a -> Bool
-member key (GenericSet dict) =
+member key (Set_elm_builtin dict) =
     GenericDict.member key dict
 
 
 {-| Determine the number of elements in a set.
 -}
 size : GenericSet a -> Int
-size (GenericSet dict) =
+size (Set_elm_builtin dict) =
     GenericDict.size dict
 
 
@@ -120,16 +120,16 @@ size (GenericSet dict) =
 Keep the comparer from the first set.
 -}
 union : GenericSet a -> GenericSet a -> GenericSet a
-union (GenericSet dict1) (GenericSet dict2) =
-    GenericSet (GenericDict.union dict1 dict2)
+union (Set_elm_builtin dict1) (Set_elm_builtin dict2) =
+    Set_elm_builtin (GenericDict.union dict1 dict2)
 
 
 {-| Get the intersection of two sets. Keeps values that appear in both sets.
 Keeps the comparer from the first set.
 -}
 intersect : GenericSet a -> GenericSet a -> GenericSet a
-intersect (GenericSet dict1) (GenericSet dict2) =
-    GenericSet (GenericDict.intersect dict1 dict2)
+intersect (Set_elm_builtin dict1) (Set_elm_builtin dict2) =
+    Set_elm_builtin (GenericDict.intersect dict1 dict2)
 
 
 {-| Get the difference between the first set and the second.
@@ -137,14 +137,14 @@ Keeps values that do not appear in the second set.
 Keeps the comparer from the first set.
 -}
 diff : GenericSet a -> GenericSet a -> GenericSet a
-diff (GenericSet dict1) (GenericSet dict2) =
-    GenericSet (GenericDict.diff dict1 dict2)
+diff (Set_elm_builtin dict1) (Set_elm_builtin dict2) =
+    Set_elm_builtin (GenericDict.diff dict1 dict2)
 
 
 {-| Convert a set into a list, sorted from lowest to highest.
 -}
 toList : GenericSet a -> List a
-toList (GenericSet dict) =
+toList (Set_elm_builtin dict) =
     GenericDict.keys dict
 
 
@@ -158,14 +158,14 @@ fromList comparer list =
 {-| Fold over the values in a set, in order from lowest to highest.
 -}
 foldl : (a -> b -> b) -> b -> GenericSet a -> b
-foldl func initialState (GenericSet dict) =
+foldl func initialState (Set_elm_builtin dict) =
     GenericDict.foldl (\key _ state -> func key state) initialState dict
 
 
 {-| Fold over the values in a set, in order from highest to lowest.
 -}
 foldr : (a -> b -> b) -> b -> GenericSet a -> b
-foldr func initialState (GenericSet dict) =
+foldr func initialState (Set_elm_builtin dict) =
     GenericDict.foldr (\key _ state -> func key state) initialState dict
 
 
@@ -173,7 +173,7 @@ foldr func initialState (GenericSet dict) =
 comparer.
 -}
 map : (b -> b -> Order) -> (a -> b) -> GenericSet a -> GenericSet b
-map comparer func (GenericSet dict) =
+map comparer func (Set_elm_builtin dict) =
     fromList comparer (List.map func (GenericDict.keys dict))
 
 
@@ -194,13 +194,13 @@ map comparer func (GenericSet dict) =
 
 -}
 filter : (a -> Bool) -> GenericSet a -> GenericSet a
-filter isGood (GenericSet dict) =
-    GenericSet (GenericDict.filter (\key _ -> isGood key) dict)
+filter isGood (Set_elm_builtin dict) =
+    Set_elm_builtin (GenericDict.filter (\key _ -> isGood key) dict)
 
 
 {-| Create two new sets. The first contains all the elements that passed the
 given test, and the second contains all the elements that did not.
 -}
 partition : (a -> Bool) -> GenericSet a -> ( GenericSet a, GenericSet a )
-partition isGood (GenericSet dict) =
-    Tuple.mapBoth GenericSet GenericSet (GenericDict.partition (\key _ -> isGood key) dict)
+partition isGood (Set_elm_builtin dict) =
+    Tuple.mapBoth Set_elm_builtin Set_elm_builtin (GenericDict.partition (\key _ -> isGood key) dict)
