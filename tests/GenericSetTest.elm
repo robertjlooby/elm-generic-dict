@@ -2,20 +2,7 @@ module GenericSetTest exposing (tests)
 
 import Expect exposing (Expectation)
 import GenericSet
-import Test exposing (Test, describe, skip, test)
-
-
-compare2 : comparable -> comparable -> Order
-compare2 a b =
-    case compare a b of
-        EQ ->
-            EQ
-
-        LT ->
-            GT
-
-        GT ->
-            LT
+import Test exposing (Test, describe, test)
 
 
 set : GenericSet.GenericSet Int
@@ -50,9 +37,9 @@ tests =
             describe "ordering Tests"
                 [ test "orders by the comparer" <|
                     \() ->
-                        GenericSet.fromList compare2 (List.range 1 100)
+                        GenericSet.fromList compare (List.range 1 100)
                             |> GenericSet.toList
-                            |> Expect.equal (List.reverse (List.range 1 100))
+                            |> Expect.equal (List.range 1 100)
                 ]
 
         modifierTests =
@@ -129,19 +116,18 @@ tests =
                 [ test "union combines two sets" <|
                     \() ->
                         assertEqualAsStrings set (GenericSet.union setPart1 setPart2)
-                , skip <|
-                    test "union uses the comparer from the first set" <|
-                        \() ->
-                            let
-                                set1 =
-                                    GenericSet.fromList compare2 [ 3, 2, 1 ]
+                , test "union" <|
+                    \() ->
+                        let
+                            set1 =
+                                GenericSet.fromList compare [ 3, 2, 1 ]
 
-                                set2 =
-                                    GenericSet.fromList compare [ 3, 4, 5 ]
-                            in
-                            GenericSet.union set1 set2
-                                |> GenericSet.toList
-                                |> Expect.equal [ 5, 4, 3, 2, 1 ]
+                            set2 =
+                                GenericSet.fromList compare [ 3, 4, 5 ]
+                        in
+                        GenericSet.union set1 set2
+                            |> GenericSet.toList
+                            |> Expect.equal [ 1, 2, 3, 4, 5 ]
                 , test "intersect gets the overlap of two sets" <|
                     \() ->
                         let
@@ -154,32 +140,18 @@ tests =
                         GenericSet.intersect set1 set2
                             |> GenericSet.toList
                             |> Expect.equal [ 2, 3 ]
-                , skip <|
-                    test "intersect uses the comparer from the first set" <|
-                        \() ->
-                            let
-                                set1 =
-                                    GenericSet.fromList compare2 [ 3, 2, 1 ]
+                , test "diff gets the values in the first set that are not in the second" <|
+                    \() ->
+                        let
+                            set1 =
+                                GenericSet.fromList compare [ 1, 2, 3, 4 ]
 
-                                set2 =
-                                    GenericSet.fromList compare [ 2, 3, 4 ]
-                            in
-                            GenericSet.intersect set1 set2
-                                |> GenericSet.toList
-                                |> Expect.equal [ 3, 2 ]
-                , skip <|
-                    test "diff gets the values in the first set that are not in the second" <|
-                        \() ->
-                            let
-                                set1 =
-                                    GenericSet.fromList compare [ 1, 2, 3, 4 ]
-
-                                set2 =
-                                    GenericSet.fromList compare2 [ 3, 4, 5 ]
-                            in
-                            GenericSet.diff set1 set2
-                                |> GenericSet.toList
-                                |> Expect.equal [ 1, 2 ]
+                            set2 =
+                                GenericSet.fromList compare [ 3, 4, 5 ]
+                        in
+                        GenericSet.diff set1 set2
+                            |> GenericSet.toList
+                            |> Expect.equal [ 1, 2 ]
                 ]
 
         transformTests =
