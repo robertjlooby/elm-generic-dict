@@ -12,6 +12,7 @@ The api is essentially the same as the core Dict/Set except that the "builder"
 functions (`empty`, `singleton` , `fromList`) take a comparer of type
 (key -> key -> Order) as their first argument.
 
+
 ```elm
 import GenericDict exposing (GenericDict)
 import String exposing (toLower)
@@ -39,6 +40,63 @@ f : Maybe Int
 f = GenericDict.get "FiRsT" dict2
 -- Just 3
 ```
+
+
+## Attention
+
+You have to use same comparator for dictionaries or sets of same data.
+This requirement is needed to keep correct working of operations such as
+get/insert/update/remove/etc.
+
+```elm
+-- BAD unexpected result
+
+
+reversedCompare : comparable -> comparable -> Order
+reversedCompare a b =
+    case compare a b of
+        LT ->
+            GT
+
+        EQ ->
+            EQ
+
+        GT ->
+            LT
+
+
+unexpectedResult : GenericDict String Int
+unexpectedResult =
+    GenericDict.union
+        (GenericDict.fromList reversedCompare [ ( 1, "a" ), ( 2, "b" ), ( 3, "c" ), ( 4, "d" ) ])
+        (GenericDict.fromList compare [ ( 3, "cc" ), ( 4, "dd" ), ( 5, "ee" ) ])
+
+
+unexpectedEqual : Bool
+unexpectedEqual =
+    -- True
+    GenericDict.toList unexpectedResult == [ ( 3, "cc" ), ( 4, "d" ), ( 5, "ee" ), ( 3, "c" ), ( 2, "b" ), ( 1, "a" ) ]
+
+
+
+-- GOOD expected result
+
+
+expectedResult : GenericDict String Int
+expectedResult =
+    GenericDict.union
+        (GenericDict.fromList compare [ ( 1, "a" ), ( 2, "b" ), ( 3, "c" ), ( 4, "d" ) ])
+        (GenericDict.fromList compare [ ( 3, "cc" ), ( 4, "dd" ), ( 5, "ee" ) ])
+
+
+expectedEqual : Bool
+expectedEqual =
+    -- True
+    GenericDict.toList expectedResult == [ ( 1, "a" ), ( 2, "b" ), ( 3, "c" ), ( 4, "d" ), ( 5, "ee" ) ]
+
+```
+
+---
 
 This builds off of the [core Dict implementation][elm-core] by Evan Czaplicki.
 
