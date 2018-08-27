@@ -2,20 +2,7 @@ module GenericDictTest exposing (tests)
 
 import Expect exposing (Expectation)
 import GenericDict
-import Test exposing (Test, describe, skip, test)
-
-
-compare2 : comparable -> comparable -> Order
-compare2 a b =
-    case compare a b of
-        EQ ->
-            EQ
-
-        LT ->
-            GT
-
-        GT ->
-            LT
+import Test exposing (Test, describe, test)
 
 
 animals : GenericDict.GenericDict String String
@@ -111,30 +98,37 @@ tests =
         combineTests =
             let
                 dict1 =
-                    GenericDict.fromList compare2 [ ( 1, "a" ), ( 2, "b" ), ( 3, "c" ), ( 4, "d" ) ]
+                    GenericDict.fromList compare [ ( 1, "a" ), ( 2, "b" ), ( 3, "c" ), ( 4, "d" ) ]
 
                 dict2 =
                     GenericDict.fromList compare [ ( 3, "cc" ), ( 4, "dd" ), ( 5, "ee" ) ]
             in
             describe "combine Tests"
-                [ skip <|
-                    test "union uses first groups comparer (and values in a collision)" <|
-                        \() ->
-                            GenericDict.union dict1 dict2
-                                |> GenericDict.toList
-                                |> Expect.equal [ ( 5, "ee" ), ( 4, "d" ), ( 3, "c" ), ( 2, "b" ), ( 1, "a" ) ]
-                , skip <|
-                    test "intersect uses first groups comparer (and values in a collision)" <|
-                        \() ->
-                            GenericDict.intersect dict1 dict2
-                                |> GenericDict.toList
-                                |> Expect.equal [ ( 4, "d" ), ( 3, "c" ) ]
-                , skip <|
-                    test "diff uses first groups comparer" <|
-                        \() ->
-                            GenericDict.diff dict1 dict2
-                                |> GenericDict.toList
-                                |> Expect.equal [ ( 2, "b" ), ( 1, "a" ) ]
+                [ test "union" <|
+                    \() ->
+                        GenericDict.union dict1 dict2
+                            |> GenericDict.toList
+                            |> Expect.equal [ ( 1, "a" ), ( 2, "b" ), ( 3, "c" ), ( 4, "d" ), ( 5, "ee" ) ]
+                , test "intersect" <|
+                    \() ->
+                        GenericDict.intersect dict1 dict2
+                            |> GenericDict.toList
+                            |> Expect.equal [ ( 3, "c" ), ( 4, "d" ) ]
+                , test "diff" <|
+                    \() ->
+                        GenericDict.diff dict1 dict2
+                            |> GenericDict.toList
+                            |> Expect.equal [ ( 1, "a" ), ( 2, "b" ) ]
+                , test "merge" <|
+                    \() ->
+                        GenericDict.merge
+                            (\key leftValue acc -> ( key, leftValue ) :: acc)
+                            (\key leftValue rightValue acc -> ( key, leftValue ++ "_" ++ rightValue ) :: acc)
+                            (\key rightValue acc -> ( key, rightValue ) :: acc)
+                            dict1
+                            dict2
+                            []
+                            |> Expect.equal [ ( 5, "ee" ), ( 4, "d_dd" ), ( 3, "c_cc" ), ( 2, "b" ), ( 1, "a" ) ]
                 ]
 
         keyValueTests =

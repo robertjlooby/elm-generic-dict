@@ -14,6 +14,7 @@ module GenericDict
         , keys
         , map
         , member
+        , merge
         , partition
         , remove
         , singleton
