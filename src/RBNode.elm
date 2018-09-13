@@ -25,6 +25,8 @@ module RBNode
         , values
         )
 
+import Maybe exposing (withDefault)
+
 -- The color of a node. Leaves are considered Black.
 
 
@@ -383,7 +385,7 @@ singleton key value =
 
 union : (k -> k -> Order) -> RBNode k v -> RBNode k v -> RBNode k v
 union comparer t1 t2 =
-    foldl (insert comparer) t2 t1
+    foldl (\k v -> update comparer k (withDefault v >> Just)) t1 t2
 
 
 intersect : (k -> k -> Order) -> RBNode k v -> RBNode k v -> RBNode k v
